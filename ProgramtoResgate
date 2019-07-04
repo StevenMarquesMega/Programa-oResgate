@@ -1,3 +1,6 @@
+//======================================================================================
+//--- Parametros para controle de velocidade paras as funcões que possuem motor. ---
+
 #define FRENTE 35
 #define OBSTACULO 60
 #define SEGUIDOR 40
@@ -6,29 +9,52 @@
 #define frentao 100
 #define limiar 15
 
-void RV();
+//--- Fim dos parametros de controle de velocidade ---
+//======================================================================================
 
-// AO vê verde deslocar 35 mm para frente.
-int contador = 0;
+//======================================================================================
+//--- Variaveis de controle e atribuição de valores para seguidor de linha e verdes ---
+
 int preto = 82;  // menor que 82 preto
 int branco = 82;// maior que 82 branco
 int verde = 4;
 int verde_2 = 3;
 unsigned int A, B, PD, PE, VA, VB;
-int curva = 600; // Esse valor correspone a meia rotação
-               // Uma rotação desloca 110 mm - 360º
+unsigned int  ColorNum, Red, Green, Blue;
+unsigned int  ColorNum_2, Red_2, Green_2, Blue_2;
+
+//--- Fim das variaveis de valores do seguidor de linha e verdes ---
+//======================================================================================
+
+//======================================================================================
+//--- Variavel para controle de rotação ---
+
+int curva = 600;
+
+//--- Fim da varivavel que equivale a uma rotação ---
+//======================================================================================
+
+//======================================================================================
+//--- Variaveis para controle de leitura do sensor de inclinação e o sensor de toque ---
 
 int Ultra = 0;
 int Resgate = 0;
 
-unsigned int  ColorNum, Red, Green, Blue;
-unsigned int  ColorNum_2, Red_2, Green_2, Blue_2;
+//--- Fim das variaveis para sensor de inclinação e o sensor de toque ---
+//======================================================================================
 
+//======================================================================================
+//--- Função para resgate de vitimas ---
 
-//---Ler sensor do ponta esquerda---
+void RV();
+
+//--- Fim da função de regate de vitimas ---
+//======================================================================================
+
+//======================================================================================
+//--- Função para fazer leitura do sensor de cor HITECHNIC ---
 
 void lerSensorDeLinha(){
-
 
     SetHTColor2Mode(IN_2, HT_CMD_COLOR2_ACTIVE);// Hi Tec
     SetSensorLowspeed(IN_2);                   // Hi Tec
@@ -59,8 +85,14 @@ void lerSensorDeLinha(){
 
      //A e D
      //B e C
-
 }
+
+//--- Fim da função que faz a leitura do sensor de cor ---
+//======================================================================================
+
+//======================================================================================
+//--- Função para fazer leitura dos sensores: inclinação e toques ---
+
 void lerDistancia(){
 
        SetSensor(IN_4, SENSOR_TOUCH);
@@ -72,6 +104,13 @@ void lerResgate(){
        Resgate = Sensor(IN_1);
        NumOut(20, LCD_LINE4, Resgate);
 }
+
+//--- Fim da função de leitura dos sensores: inclinação e toques ---
+//======================================================================================
+
+//======================================================================================
+//--- Funções para controle de locomoção dos motores do robô ---
+
 void Garra_D(){
     OnFwd(OUT_A, vel_F);
 }
@@ -81,7 +120,7 @@ void Garra_S(){
 void Garra_P(){
     OnFwd(OUT_A, 0);
 }
-void  Frente()  {
+void  Frente(){
     OnFwd(OUT_B, FRENTE);
     OnFwd(OUT_C, FRENTE);
     lerSensorDeLinha();
@@ -156,7 +195,18 @@ void curva135Direita(){
      RotateMotorEx(OUT_BC, 50, 1.5*curva, 100, true, true);
      lerSensorDeLinha();
 }
-//---OBSTACULO---
+void curva135Esquerda(){
+     //RotateMotorEx(‘ports',‘speed',‘degrees',‘turnpct',‘sync', 'stop')
+     RotateMotorEx(OUT_BC, 50, 1.7*curva, -100, true, true);
+     lerSensorDeLinha();
+}
+
+//--- Fim das funções de controle para locomoção do robô ---
+//======================================================================================
+
+//======================================================================================
+//--- Funções para controle dos motores que desvia do obstaculo com mais velocidade ---
+
 void  Frente_O()  {
     OnFwd(OUT_C, OBSTACULO);
     OnFwd(OUT_B, OBSTACULO);
@@ -181,30 +231,40 @@ void Direita_O()  {
     lerSensorDeLinha();
     //lerDistancia();
   }
+  
+//--- Fim das funções de controle dos motores que desvia do obstaculo ---
+//======================================================================================
 
-//--------------------------------------------------------------------
-//Seguidor para detectar linha preta e branca e executar suas funções
-//--------------------------------------------------------------------
+//======================================================================================
+//--- Função para controle e execução do seguidor de linha normal ---
+
 void Seguidor(){
 
+  //Branco -  Branco: Frente
   lerSensorDeLinha();
   if(A > branco && B > branco)
   {
          Frente();
   }
+  
+  //Branco - Preto: Esquerda
   lerSensorDeLinha();
   if(A > branco && B < preto)
   {
          Esquerda();
          Wait(0.1);
   }
+  
+  //Preto - Branco: Direita
   lerSensorDeLinha();
   if(A < preto && B > branco)
   {
          Direita();
          Wait(0.1);
   }
-//ATUALIZAÇÃO DO SEGUIDOR PRETO PRETO
+  
+  //Preto - Preto:
+  //Análise para detectar até que um sensor saia do preto e ou outro no branco
   lerSensorDeLinha();
   if(A < preto && B < preto){
    while(A < preto && B < preto){
@@ -230,6 +290,13 @@ void Seguidor(){
      }//fim do 2 if
    }
 }
+
+//--- Fim da função para controle e execução do seguidor de linha normal ---
+//======================================================================================
+
+//======================================================================================
+//--- Função para detectar os verdes antes do seguidor normal ---
+
 void seguidorVerde(){
        lerSensorDeLinha();
        //int x;
@@ -297,6 +364,8 @@ void seguidorVerde(){
        }
     Seguidor();
 }
+//--- Fim da função para detectar os verdes antes do seguidor normal ---
+//======================================================================================
 
 //-------------------------------------------------------
 void desvio(){
@@ -378,12 +447,14 @@ void desvio_2(){
 }
 //---Triangulos---
 void t_1(){
+
+      //resgate após o toque
       Tras_O();
       Wait(560);
       Parar();
       Wait(10);
       Esquerda_O();
-      Wait(500);
+      Wait(700);
       Parar();
       Wait(10);
       Rampa();
@@ -391,9 +462,11 @@ void t_1(){
       Parar();
       Wait(10);
       Esquerda_O();
-      Wait(1600);
+      Wait(1995);
       Parar();
       Wait(10);
+      
+      //Soltar vitimias
       RotateMotor(OUT_BC, 100, -400);
       Parar();
       Wait(150);
@@ -407,9 +480,11 @@ void t_1(){
       Parar();
       Wait(10);
       Direita_O();
-      Wait(1200);
+      Wait(1400);
       Parar();
       Wait(10);
+      
+      //Testar 2 Parede depois do triangulo.
       RotateMotor(OUT_BC, 80, 1800);
       Parar();
       Wait(10);
@@ -419,14 +494,27 @@ void t_1(){
       }
       Parar();
       Wait(10);
+      RotateMotor(OUT_B, 100, 200);
+      Parar();
+      Wait(10);
+      Frente_O();
+      Wait(1900);
+      Parar();
+      Wait(10);
       Esquerda_O();
-      Wait(2000);
+      Wait(1850);
+      Parar();
+      Wait(10);
+      Tras_O();
+      Wait(10);
       Parar();
       Wait(10);
       Garra_D();
       Wait(2000);
       Garra_P();
-      RotateMotor(OUT_BC, 80, 1800);
+      
+      //Testa 3 Parede depois do triangulo.
+      RotateMotor(OUT_BC, 80, 2500);
       Parar();
       Wait(10);
       lerResgate();
@@ -435,6 +523,78 @@ void t_1(){
       }
       Parar();
       Wait(10);
+      RotateMotor(OUT_B, 100, 500);
+      Parar();
+      Wait(10);
+      Frente_O();
+      Wait(1000);
+      Parar();
+      Wait(10);
+      RotateMotor(OUT_B, 100, 200);
+      Parar();
+      Wait(10);
+      Frente();
+      Wait(1500);
+      Parar();
+      Wait(10);
+      Esquerda_O();
+      Wait(1690);
+      Parar();
+      Wait(10);
+      Tras_O();
+      Wait(90);
+      Parar();
+      Wait(1);
+      Garra_D();
+      Wait(2000);
+      Garra_P();
+      
+      //Testa 4 Parede depois do triangulo.
+      RotateMotor(OUT_BC, 80, 1000);
+      Parar();
+      Wait(10);
+      lerResgate();
+       if(Resgate == 0){
+       Tras_O();
+       Wait(250);
+       Parar();
+       Wait(1);
+       Esquerda_O();
+       Wait(650);
+       Parar();
+       Wait(10);
+      }
+      RotateMotor(OUT_BC, 80, 1400);
+      Parar();
+      Wait(10);
+      lerResgate();
+       if(Resgate == 0){
+       RV();
+      }
+      
+      Parar();
+      Wait(10);
+      RotateMotor(OUT_B, 100, 400);
+      Parar();
+      Wait(10);
+      Garra_D();
+      Wait(2000);
+      Garra_P();
+      RotateMotor(OUT_BC, 100, 1400);
+      lerResgate();
+       if(Resgate == 0){
+        Tras_O();
+        Wait(200);
+        curva135Esquerda();
+        RotateMotor(OUT_BC, 100, -400);
+        Parar();
+        Wait(150);
+        Rampa();
+        Wait(100);
+        RotateMotor(OUT_BC, 100, -500);
+        Parar();
+        Wait(150);
+       }
 }
 
 void t_2(){
@@ -463,16 +623,17 @@ void ResInicio(){
      Parar();
      Wait(10);
      Esquerda_O();
-     Wait(1350);
+     Wait(1800);
      Tras_O();
-     Wait(200);
+     Wait(300);
      Parar();
      Wait(10);
      Garra_D();
      Wait(2000);
      Garra_P();
      Wait(10);
-     RotateMotor(OUT_BC, 60, 1800);
+     RotateMotor(OUT_BC, 70, 1900);
+     //Testar Parede.
      lerResgate();
      if(Resgate == 0){
      RV();}
@@ -482,11 +643,11 @@ void ResInicio(){
      Parar();
      Wait(10);
      Frente();
-     Wait(10);
+     Wait(50);
      Parar();
      Wait(10);
      Direita_O();
-     Wait(1400);
+     Wait(2200);
      Parar();
      Wait(10);
      Tras_O();
@@ -498,10 +659,11 @@ void ResInicio(){
      Garra_P();
      Wait(10);
      Direita_O();
-     Wait(300);
+     Wait(400);
      Parar();
      Wait(10);
-     RotateMotor(OUT_BC, 80, 800);
+     //Testar Triangulo t_1();
+     RotateMotor(OUT_BC, 80, 900);
      Parar();
      Wait(10);
      lerResgate();
